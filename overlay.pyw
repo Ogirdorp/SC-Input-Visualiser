@@ -84,13 +84,13 @@ def find_connected_joysticks():
 CONFIG_FILE = "overlay_config.json"
 
 DEFAULT_CONFIG = {
-    "stick_device": 2,
+    "stick_device": 3,
     "stick_x_axis": "x",
     "stick_y_axis": "y",
-    "boost_button": 0,
-    "pedals_device": 3,
+    "boost_button": 1,
+    "pedals_device": 2,
     "throttle_axis": "z",
-    "reverse_axis": "r",
+    "reverse_axis": "y",
     "window_x": 50,
     "window_y": 50,
     "hold_threshold": 5.0,  # seconds
@@ -157,7 +157,7 @@ class JoystickOverlay:
         # Create window
         self.root = tk.Tk()
         self.root.title("HOSAM Overlay")
-        self.root.geometry(f"500x240+{self.config['window_x']}+{self.config['window_y']}")
+        self.root.geometry(f"560x220+{self.config['window_x']}+{self.config['window_y']}")
         self.root.overrideredirect(True)
         self.root.attributes('-topmost', True)
         self.root.attributes('-alpha', 0.95)
@@ -259,47 +259,79 @@ class JoystickOverlay:
         self.reverse_label = tk.Label(r_frame, text="50%", font=('Consolas', 10), fg=ACCENT, bg=BG_DARK, width=4)
         self.reverse_label.pack(side='left')
         
-        # === CONFIG BUTTON ===
-        self.config_btn = tk.Label(viz_frame, text="Config", font=('Segoe UI', 9), fg=ACCENT, bg=BG_DARK, 
+        # === CONFIG BUTTON (under pedals) ===
+        self.config_btn = tk.Label(pedals_frame, text="⚙ Config", font=('Segoe UI', 9), fg=ACCENT, bg=BG_DARK, 
                                    cursor='hand2')
-        self.config_btn.pack(side='right', anchor='ne')
+        self.config_btn.pack(anchor='e', pady=(5, 0))
         self.config_btn.bind('<Button-1>', lambda e: self.toggle_config())
-        
-        # === CONFIG PANEL (hidden by default) ===
-        self.config_frame = tk.Frame(self.main_frame, bg=BG_PANEL, padx=10, pady=8)
-        
-        cfg_row1 = tk.Frame(self.config_frame, bg=BG_PANEL)
-        cfg_row1.pack(fill='x', pady=2)
-        tk.Label(cfg_row1, text="Stick ID:", font=('Segoe UI', 8), fg=TEXT_DIM, bg=BG_PANEL, width=10, anchor='e').pack(side='left')
-        self.stick_var = tk.StringVar(value=str(self.config['stick_device']))
-        tk.Spinbox(cfg_row1, from_=0, to=15, width=4, textvariable=self.stick_var, 
-                   command=self.on_config_change, font=('Consolas', 9)).pack(side='left', padx=5)
-        
-        tk.Label(cfg_row1, text="Pedals ID:", font=('Segoe UI', 8), fg=TEXT_DIM, bg=BG_PANEL, width=10, anchor='e').pack(side='left', padx=(20, 0))
-        self.pedals_var = tk.StringVar(value=str(self.config['pedals_device']))
-        tk.Spinbox(cfg_row1, from_=0, to=15, width=4, textvariable=self.pedals_var, 
-                   command=self.on_config_change, font=('Consolas', 9)).pack(side='left', padx=5)
-        
-        tk.Label(cfg_row1, text="Boost Btn:", font=('Segoe UI', 8), fg=TEXT_DIM, bg=BG_PANEL, width=10, anchor='e').pack(side='left', padx=(20, 0))
-        self.btn_var = tk.StringVar(value=str(self.config['boost_button']))
-        tk.Spinbox(cfg_row1, from_=0, to=31, width=4, textvariable=self.btn_var, 
-                   command=self.on_config_change, font=('Consolas', 9)).pack(side='left', padx=5)
     
     def toggle_config(self):
         self.show_config = not self.show_config
         if self.show_config:
-            self.config_frame.pack(fill='x', pady=(10, 0))
+            # Create popup window
+            self.config_window = tk.Toplevel(self.root)
+            self.config_window.title("Config")
+            self.config_window.geometry("300x150")
+            self.config_window.configure(bg=BG_PANEL)
+            self.config_window.attributes('-topmost', True)
+            self.config_window.resizable(False, False)
+            
+            # Position next to main window
+            x = self.root.winfo_x() + self.root.winfo_width() + 10
+            y = self.root.winfo_y()
+            self.config_window.geometry(f"+{x}+{y}")
+            
+            # Config content
+            frame = tk.Frame(self.config_window, bg=BG_PANEL, padx=15, pady=15)
+            frame.pack(fill='both', expand=True)
+            
+            # Stick ID
+            row1 = tk.Frame(frame, bg=BG_PANEL)
+            row1.pack(fill='x', pady=5)
+            tk.Label(row1, text="Stick ID:", font=('Segoe UI', 10), fg=TEXT_DIM, bg=BG_PANEL, width=10, anchor='e').pack(side='left')
+            self.stick_var = tk.StringVar(value=str(self.config['stick_device']))
+            tk.Spinbox(row1, from_=0, to=15, width=5, textvariable=self.stick_var, 
+                       command=self.on_config_change, font=('Consolas', 10)).pack(side='left', padx=10)
+            
+            # Pedals ID
+            row2 = tk.Frame(frame, bg=BG_PANEL)
+            row2.pack(fill='x', pady=5)
+            tk.Label(row2, text="Pedals ID:", font=('Segoe UI', 10), fg=TEXT_DIM, bg=BG_PANEL, width=10, anchor='e').pack(side='left')
+            self.pedals_var = tk.StringVar(value=str(self.config['pedals_device']))
+            tk.Spinbox(row2, from_=0, to=15, width=5, textvariable=self.pedals_var, 
+                       command=self.on_config_change, font=('Consolas', 10)).pack(side='left', padx=10)
+            
+            # Boost Button
+            row3 = tk.Frame(frame, bg=BG_PANEL)
+            row3.pack(fill='x', pady=5)
+            tk.Label(row3, text="Boost Btn:", font=('Segoe UI', 10), fg=TEXT_DIM, bg=BG_PANEL, width=10, anchor='e').pack(side='left')
+            self.btn_var = tk.StringVar(value=str(self.config['boost_button']))
+            tk.Spinbox(row3, from_=0, to=31, width=5, textvariable=self.btn_var, 
+                       command=self.on_config_change, font=('Consolas', 10)).pack(side='left', padx=10)
+            
             self.config_btn.config(fg=WARNING)
+            
+            # Handle window close
+            self.config_window.protocol("WM_DELETE_WINDOW", self.close_config)
         else:
-            self.config_frame.pack_forget()
-            self.config_btn.config(fg=ACCENT)
+            self.close_config()
+    
+    def close_config(self):
+        if hasattr(self, 'config_window') and self.config_window:
+            self.config_window.destroy()
+            self.config_window = None
+        self.show_config = False
+        self.config_btn.config(fg=ACCENT)
     
     def on_config_change(self):
         try:
-            self.config['stick_device'] = int(self.stick_var.get())
-            self.config['pedals_device'] = int(self.pedals_var.get())
-            self.config['boost_button'] = int(self.btn_var.get())
-            self.boost_canvas.itemconfig(self.boost_text, text=f"B{self.config['boost_button']}")
+            if hasattr(self, 'stick_var'):
+                self.config['stick_device'] = int(self.stick_var.get())
+            if hasattr(self, 'pedals_var'):
+                self.config['pedals_device'] = int(self.pedals_var.get())
+            if hasattr(self, 'btn_var'):
+                self.config['boost_button'] = int(self.btn_var.get())
+                self.boost_canvas.itemconfig(self.boost_text, text=f"B{self.config['boost_button']}")
             save_config(self.config)
         except ValueError:
             pass
@@ -419,6 +451,8 @@ class JoystickOverlay:
     
     def quit(self):
         self.running = False
+        if hasattr(self, 'config_window') and self.config_window:
+            self.config_window.destroy()
         self.config['window_x'] = self.root.winfo_x()
         self.config['window_y'] = self.root.winfo_y()
         save_config(self.config)
