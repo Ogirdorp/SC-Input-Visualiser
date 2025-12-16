@@ -1,12 +1,3 @@
-"""
-HOSAM Joystick Overlay v2
-- Clean visual design
-- "Holding too long" detection for axis inputs
-- No external dependencies
-
-Usage: python overlay.pyw (or double-click)
-"""
-
 import tkinter as tk
 import ctypes
 from ctypes import wintypes
